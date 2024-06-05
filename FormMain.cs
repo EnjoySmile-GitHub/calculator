@@ -57,12 +57,27 @@ namespace calculator
             {
                 if (_flgClearNumber)
                 {
+                    if (!_flgCalculation)
+                    {
+                        labelShowNumberHistory.Text = "";
+                    }
+
                     labelShowNumber.Text = ((System.Windows.Forms.ButtonBase)sender).Text;
                     _flgClearNumber = false;
                 }
                 else
                 {
-                    labelShowNumber.Text += ((System.Windows.Forms.ButtonBase)sender).Text;
+                    // TODO:数値を連続で表示するかの処理搭載。
+                    //      フラグを搭載したほうが良い。「=」使わないで連続演算の時に数値を連続させるようにする。
+
+                    if (_flgCalculation)
+                    {
+                        labelShowNumber.Text = ((System.Windows.Forms.ButtonBase)sender).Text;
+                    }
+                    else
+                    {
+                        labelShowNumber.Text += ((System.Windows.Forms.ButtonBase)sender).Text;
+                    }
                 }
             }
         }
@@ -90,30 +105,53 @@ namespace calculator
                         0,
                         labelShowNumberHistory.Text.IndexOf(" ")));
 
-                    double answer = getCalculation(numberHistory, numberNow, _inputSymbol);
-                    labelShowNumber.Text = answer.ToString();
+                    double answer = getCalculation(
+                        numberHistory,
+                        numberNow,
+                        _inputSymbol);
 
-                    setlabelShowNumberHistory(numberHistory, numberNow, _inputSymbol);
+                    string symbolNow = ((System.Windows.Forms.ButtonBase)sender).Text;
+
+                    if (symbolNow == "=")
+                    {
+                        setEquallabelShowNumberHistory(
+                        numberHistory,
+                        numberNow,
+                        _inputSymbol,
+                        symbolNow);
+
+                        _flgCalculation = false;
+                        _flgClearNumber = true;
+                    }
+                    else
+                    {
+                        setEnzansilabelShowNumberHistory(answer, symbolNow);
+                    }
+
+                    _inputSymbol = symbolNow;
+                    labelShowNumber.Text = answer.ToString();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show(
                     "計算処理でエラーが発生しました。\r\n" + ex,
                     "エラー",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+
+                    formInitialization();
                 }
             }
             else
             {
-                labelShowNumberHistory.Text = numberNow.ToString() + " " + 
+                _inputSymbol = ((System.Windows.Forms.ButtonBase)sender).Text;
+                labelShowNumberHistory.Text = numberNow.ToString() + " " +
                     ((System.Windows.Forms.ButtonBase)sender).Text;
                 labelShowNumber.Text = numberNow.ToString();
-                _inputSymbol = ((System.Windows.Forms.ButtonBase)sender).Text;
-            }
 
-            _flgCalculation = true;
-            _flgClearNumber = true;
+                _flgCalculation = true;
+                _flgClearNumber = true;
+            }
         }
 
         private void buttonBackSpace_Click(object sender, EventArgs e)
@@ -183,22 +221,26 @@ namespace calculator
         }
 
         /// <summary>
-        /// 計算履歴にセットする
+        /// 「=」の場合、計算履歴にセットする。
         /// </summary>
         /// <param name="number1">値1</param>
         /// <param name="number2">値2</param>
         /// <param name="symbolOld">ひとつ前の演算子</param>
         /// <param name="symbolNow">現在の演算子</param>
-        private void setlabelShowNumberHistory(double number1, double number2, string symbolOld, string symbolNow)
+        private void setEquallabelShowNumberHistory(double number1, double number2, string symbolOld, string symbolNow)
         {
-            if(symbolNow == "=")
-            {
-                // TODO:ここから行う。計算履歴を表示するところから。
-            }
-            else
-            {
-                
-            }
+            labelShowNumberHistory.Text = number1 + " " + symbolOld + " "
+                + number2 + " " + symbolNow;
+        }
+
+        /// <summary>
+        /// 「+,-,*,/」の場合、計算履歴にセットする。
+        /// </summary>
+        /// <param name="answer">計算結果</param>
+        /// <param name="symbol">現在の演算子</param>
+        private void setEnzansilabelShowNumberHistory(double answer, string symbol)
+        {
+            labelShowNumberHistory.Text = answer + " " + symbol;
         }
     }
 }
